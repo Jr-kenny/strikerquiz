@@ -216,9 +216,9 @@ function renderNav(activePage) {
     <div class="max-w-7xl mx-auto">
       <div class="top-nav glass">
         <button onclick="navigate('landing')" class="nav-brand">
-          <span class="brand-mark">⚽</span>
+          <span class="brand-mark text-[0.72rem] font-black tracking-[0.08em]">SF</span>
           <span class="font-black text-base sm:text-lg tracking-tight">
-            <span class="text-gray-100">Football</span><span class="text-gray-300">IQ</span>
+            <span class="text-gray-100">StrikerForge</span><span class="text-gray-300">Lab</span>
           </span>
         </button>
 
@@ -257,8 +257,8 @@ function renderLanding() {
 
     <main class="relative z-10 max-w-6xl mx-auto px-4 pt-8 pb-10 text-center page-enter">
       <div class="landing-brand-wrap slide-up">
-        <div class="landing-emblem">⚽</div>
-        <div class="landing-brand-text">STRIKERLAB</div>
+        <div class="landing-emblem">SF</div>
+        <div class="landing-brand-text">STRIKERFORGE LAB</div>
       </div>
 
       <div class="landing-menu slide-up" style="animation-delay:0.05s">
@@ -1168,7 +1168,7 @@ function renderAIPage() {
       <div class="bg-gradient-to-r from-slate-900 via-gray-900 to-gray-800 p-4 flex items-center gap-3">
         <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl">🤖</div>
         <div>
-          <div class="font-bold text-white">strikerlab Assistant</div>
+          <div class="font-bold text-white">StrikerForge Lab Assistant</div>
           <div class="text-gray-100 text-xs flex items-center gap-1">
             <span class="w-2 h-2 bg-gray-400 rounded-full inline-block animate-pulse"></span> Online · AI powered
           </div>
@@ -1220,7 +1220,7 @@ function renderAIPage() {
             <i class="fas fa-paper-plane"></i>
           </button>
         </div>
-        <p class="text-slate-400 text-xs mt-2 text-center">Powered by strikerlab AI</p>
+        <p class="text-slate-400 text-xs mt-2 text-center">Powered by StrikerForge Lab AI</p>
       </div>
     </div>
 
@@ -1321,11 +1321,11 @@ function renderAbout() {
   <div class="max-w-4xl mx-auto px-4 sm:px-6 py-10 page-enter">
     <div class="text-center mb-10">
       <div class="text-6xl mb-4 float-anim">⚽</div>
-      <h1 class="text-4xl font-black text-slate-900 dark:text-white mb-2">About strikerlab</h1>
+      <h1 class="text-4xl font-black text-slate-900 dark:text-white mb-2">About StrikerForge Lab</h1>
       <p class="text-slate-500 dark:text-slate-400">A focused football knowledge platform</p>
     </div>
     <div class="modern-surface p-8 space-y-6">
-      <p class="text-slate-200">strikerlab combines league quizzes, player-specific challenges, and an AI football assistant in one streamlined experience.</p>
+      <p class="text-slate-200">StrikerForge Lab combines league quizzes, player-specific challenges, and an AI football assistant in one streamlined experience.</p>
       <div class="grid sm:grid-cols-3 gap-3">
         ${[
           { title: 'League Mode', desc: 'Compete across major domestic and continental competitions.' },
