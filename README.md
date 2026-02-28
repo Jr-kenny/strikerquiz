@@ -1,73 +1,124 @@
-# Welcome to your Lovable project
+# StrikerForge Lab
 
-## Project info
+StrikerForge Lab is a football quiz + AI assistant app built with React/Vite and GenLayer Intelligent Contracts.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## What This App Does
 
-## How can I edit this code?
+- League quiz sessions from GenLayer contracts (`easy`, `mid`, `hard`)
+- Player-focused quiz sessions from a dedicated GenLayer contract
+- AI chat endpoint backed by a GenLayer AI contract
+- Dynamic parsing/rendering of contract JSON responses
 
-There are several ways of editing your application.
+## Architecture
 
-**Use Lovable**
+- Frontend: React + Vite (`src/components`, `src/pages`, `src/lib/strikerLegacyEngine.ts`)
+- API layer: Hono app in `src/integrations/app.ts`
+- GenLayer client/wrapper: `src/integrations/genlayer.ts`
+- Dev proxy: `vite.config.ts` forwards `/api/*` to the Hono app
+- Serverless entry (Vercel style): `api/[[...route]].ts`
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+All GenLayer calls run server-side through `/api/*` wrappers.
 
-Changes made via Lovable will be committed automatically to this repo.
+## Contract Routing
 
-**Use your preferred IDE**
+Quiz difficulty selects the league contract address:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- `easy` -> `VITE_GENLAYER_CONTRACT_LEAGUE_EASY`
+- `medium` (normalized to `mid`) -> `VITE_GENLAYER_CONTRACT_LEAGUE_MID`
+- `hard` -> `VITE_GENLAYER_CONTRACT_LEAGUE_HARD`
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Player quiz and AI chat use dedicated addresses:
 
-Follow these steps:
+- `VITE_GENLAYER_CONTRACT_PLAYER_QUIZ`
+- `VITE_GENLAYER_CONTRACT_AI_CHAT`
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## Prerequisites
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+- Node.js 18+
+- pnpm 10+
 
-# Step 3: Install the necessary dependencies.
-npm i
+## Setup
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+1. Install dependencies:
+
+```bash
+pnpm install
 ```
 
-**Edit a file directly in GitHub**
+2. Configure environment variables in `.env.local` (or `.env`):
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```env
+VITE_GENLAYER_KEY=0x...
+VITE_GENLAYER_CONTRACT_AI_CHAT=0x...
+VITE_GENLAYER_CONTRACT_LEAGUE_EASY=0x...
+VITE_GENLAYER_CONTRACT_LEAGUE_MID=0x...
+VITE_GENLAYER_CONTRACT_LEAGUE_HARD=0x...
+VITE_GENLAYER_CONTRACT_PLAYER_QUIZ=0x...
+```
 
-**Use GitHub Codespaces**
+3. Start development server:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```bash
+pnpm dev
+```
 
-## What technologies are used for this project?
+App runs at `http://localhost:8080`.
 
-This project is built with:
+## Scripts
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- `pnpm dev` - run Vite dev server
+- `pnpm build` - production build
+- `pnpm build:dev` - development-mode build
+- `pnpm preview` - preview production build
+- `pnpm lint` - run ESLint
+- `pnpm test` - run Vitest once
+- `pnpm test:watch` - run Vitest in watch mode
 
-## How can I deploy this project?
+## API Endpoints
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+- `GET /api/leagues`
+- `GET /api/players/popular`
+- `GET /api/quiz/:category/:difficulty?count=10`
+- `POST /api/quiz/validate`
+- `POST /api/ai/chat`
+- `POST /api/ai/player-quiz`
 
-## Can I connect a custom domain to my Lovable project?
+Use `?debug=1` or header `x-debug-receipt: true` on supported routes to include receipt/debug payloads.
 
-Yes, you can!
+## GenLayer Runtime Notes
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- Chain defaults to `studionet`
+- Consensus init is singleton-based (`initializeGenLayer`)
+- Transaction wait policy:
+  - `status: "ACCEPTED"`
+  - `retries: 150`
+  - `interval: 2000`
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## Troubleshooting
+
+### `vite` is not recognized
+
+Run:
+
+```bash
+pnpm install
+pnpm dev
+```
+
+If install was interrupted, remove `node_modules` and reinstall.
+
+### `Cannot find package 'hono'`
+
+Install dependencies again:
+
+```bash
+pnpm install
+```
+
+### pnpm warns about ignored build scripts
+
+If prompted, allow required builds:
+
+```bash
+pnpm approve-builds
+```
