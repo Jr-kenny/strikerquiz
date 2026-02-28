@@ -1,5 +1,57 @@
+declare const marked:
+  | {
+      setOptions: (options: { breaks: boolean; gfm: boolean }) => void
+      parse: (value: string) => string
+    }
+  | undefined
+
+declare global {
+  interface Window {
+    __strikerlabBooted?: boolean
+    navigate?: (page: string, params?: Record<string, unknown>) => void
+    cycleTheme?: () => void
+    selectDifficulty?: (level: string) => void
+    selectCount?: (count: number) => void
+    startQuiz?: () => Promise<void>
+    jumpToQuestion?: (index: number) => void
+    goToPrevQuestion?: () => void
+    goToNextQuestion?: () => void
+    skipQuestion?: () => void
+    confirmQuit?: () => void
+    retryQuiz?: () => void
+    searchPlayer?: () => void
+    selectPlayer?: (name: string) => void
+    startPlayerQuiz?: (playerName: string, difficulty: string) => Promise<void>
+    askSuggestion?: (text: string) => void
+    clearChat?: () => void
+    sendChatMessage?: () => Promise<void>
+  }
+}
+
 // strikerlab - Main Application
 // ===============================
+
+async function httpGet(url: string) {
+  const response = await fetch(url)
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error((data && (data.error || data.message)) || `http_${response.status}`)
+  }
+  return { data }
+}
+
+async function httpPost(url: string, body: unknown) {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error((data && (data.error || data.message)) || `http_${response.status}`)
+  }
+  return { data }
+}
 
 // ---- MARKDOWN RENDERER ----
 function renderMarkdown(text) {
@@ -117,7 +169,7 @@ function navigate(page, params = {}) {
 
 // ---- RENDER ENGINE ----
 function render() {
-  const app = document.getElementById('app');
+  const app = document.getElementById('striker-root');
   if (!app) return;
 
   let html = '';
@@ -433,9 +485,18 @@ async function startQuiz() {
 
   const cat = AppState.quizCategory || 'champions_league';
   const count = selectedCount || 10;
+  const startBtn = document.getElementById('start-quiz-btn');
+  const originalBtnHtml = startBtn ? startBtn.innerHTML : '';
+  let navigatedToQuiz = false;
+
+  if (startBtn) {
+    startBtn.setAttribute('disabled', 'true');
+    startBtn.classList.add('is-disabled');
+    startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Starting Quiz...';
+  }
 
   try {
-    const res = await axios.get(`/api/quiz/${cat}/${diff}?count=${count}`);
+    const res = await httpGet(`/api/quiz/${cat}/${diff}?count=${count}`);
     const { questions } = res.data;
 
     if (!questions || questions.length === 0) {
@@ -459,10 +520,17 @@ async function startQuiz() {
       name: AppState.quizName || cat
     };
 
+    navigatedToQuiz = true;
     navigate('quiz');
   } catch (e) {
     console.error(e);
     alert('Failed to load questions. Please try again.');
+  } finally {
+    if (!navigatedToQuiz && startBtn) {
+      startBtn.removeAttribute('disabled');
+      startBtn.classList.remove('is-disabled');
+      startBtn.innerHTML = originalBtnHtml;
+    }
   }
 }
 
@@ -1016,7 +1084,7 @@ async function startPlayerQuiz(playerName, difficulty) {
   document.body.appendChild(loader);
 
   try {
-    const res = await axios.post('/api/ai/player-quiz', { playerName, difficulty });
+    const res = await httpPost('/api/ai/player-quiz', { playerName, difficulty });
     const { questions } = res.data;
 
     loader.remove();
@@ -1217,7 +1285,7 @@ async function sendChatMessage() {
   if (sendBtn) sendBtn.disabled = true;
 
   try {
-    const res = await axios.post('/api/ai/chat', {
+    const res = await httpPost('/api/ai/chat', {
       message,
       history: AppState.chat.history.slice(-10)
     });
@@ -1301,26 +1369,90 @@ function attachEventListeners() {
   }
 }
 
+function exposeGlobalHandlers() {
+  const globalHandlers = {
+    navigate,
+    cycleTheme,
+    selectDifficulty,
+    selectCount,
+    startQuiz,
+    jumpToQuestion,
+    goToPrevQuestion,
+    goToNextQuestion,
+    skipQuestion,
+    confirmQuit,
+    retryQuiz,
+    searchPlayer,
+    selectPlayer,
+    startPlayerQuiz,
+    askSuggestion,
+    clearChat,
+    sendChatMessage
+  }
+
+  Object.assign(window, globalHandlers)
+}
+
+function clearGlobalHandlers() {
+  const keys = [
+    'navigate',
+    'cycleTheme',
+    'selectDifficulty',
+    'selectCount',
+    'startQuiz',
+    'jumpToQuestion',
+    'goToPrevQuestion',
+    'goToNextQuestion',
+    'skipQuestion',
+    'confirmQuit',
+    'retryQuiz',
+    'searchPlayer',
+    'selectPlayer',
+    'startPlayerQuiz',
+    'askSuggestion',
+    'clearChat',
+    'sendChatMessage'
+  ] as const
+
+  for (const key of keys) {
+    delete window[key]
+  }
+}
+
+const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)')
+const onSystemThemeChange = () => {
+  if (ThemeManager.get() === 'system') {
+    ThemeManager.apply('system')
+  }
+}
+
 // ---- INIT ----
 function init() {
   if (window.__strikerlabBooted) return;
   window.__strikerlabBooted = true;
+  exposeGlobalHandlers()
 
   ThemeManager.init();
 
   // Listen for system theme changes
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-    if (ThemeManager.get() === 'system') {
-      ThemeManager.apply('system');
-    }
-  });
+  systemThemeQuery.addEventListener('change', onSystemThemeChange)
 
   render();
 }
 
-// Start the app
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  init();
+function dispose() {
+  clearInterval(quizTimer)
+  systemThemeQuery.removeEventListener('change', onSystemThemeChange)
+  clearGlobalHandlers()
+  window.__strikerlabBooted = false
+
+  const root = document.getElementById('striker-root')
+  if (root) {
+    root.innerHTML = ''
+  }
+}
+
+export function mountStrikerLegacyApp() {
+  init()
+  return dispose
 }

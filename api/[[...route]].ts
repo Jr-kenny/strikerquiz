@@ -1,8 +1,8 @@
-import { handle } from 'hono/vercel'
-import app from '../src/index'
+import { handle } from "hono/vercel";
+import app from "../src/integrations/app";
 
 export const config = {
-  runtime: 'nodejs'
-}
+  runtime: "nodejs",
+};
 
-export default handle(app)
+export default handle(app);
