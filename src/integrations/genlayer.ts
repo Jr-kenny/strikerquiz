@@ -269,6 +269,31 @@ function cleanText(value: string): string {
     .trim()
 }
 
+function repairReadableJson(value: string): string {
+  let repaired = cleanText(value)
+  if (!repaired.startsWith('{') && !repaired.startsWith('[')) {
+    return repaired
+  }
+
+  // GenLayer "readable" payloads can omit commas between adjacent object fields
+  // while still preserving enough structure to recover the JSON.
+  for (let index = 0; index < 6; index += 1) {
+    const next = repaired
+      .replace(/"(?=\s*"[^"]+"\s*:)/g, '",')
+      .replace(/(\}|\])(?=\s*"[^"]+"\s*:)/g, '$1,')
+      .replace(/(true|false|null)(?=\s*"[^"]+"\s*:)/g, '$1,')
+      .replace(/(\d)(?=\s*"[^"]+"\s*:)/g, '$1,')
+      .replace(/,\s*([}\]])/g, '$1')
+
+    if (next === repaired) {
+      break
+    }
+    repaired = next
+  }
+
+  return repaired
+}
+
 export function safeJsonParse(value: unknown): unknown | null {
   if (typeof value !== 'string') return null
   const cleaned = cleanText(value)
@@ -276,7 +301,11 @@ export function safeJsonParse(value: unknown): unknown | null {
   try {
     return JSON.parse(cleaned)
   } catch {
-    return null
+    try {
+      return JSON.parse(repairReadableJson(cleaned))
+    } catch {
+      return null
+    }
   }
 }
 

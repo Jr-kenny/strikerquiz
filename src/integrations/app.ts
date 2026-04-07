@@ -283,6 +283,7 @@ app.post('/api/ai/player-quiz', async (c) => {
   }
 
   const debugRequest = isDebugRequest(c)
+  let debugContext: Record<string, unknown> = {}
 
   try {
     const normalizedDifficulty = normalizeDifficulty(difficulty)
