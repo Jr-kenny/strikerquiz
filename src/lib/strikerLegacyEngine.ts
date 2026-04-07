@@ -1,3 +1,5 @@
+import { fetchLeagueQuiz, fetchPlayerQuiz, sendAiChatMessage } from "./genlayerBrowser";
+
 declare const marked:
   | {
       setOptions: (options: { breaks: boolean; gfm: boolean }) => void
@@ -30,28 +32,6 @@ declare global {
 
 // strikerlab - Main Application
 // ===============================
-
-async function httpGet(url: string) {
-  const response = await fetch(url)
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    throw new Error((data && (data.error || data.message)) || `http_${response.status}`)
-  }
-  return { data }
-}
-
-async function httpPost(url: string, body: unknown) {
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  })
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) {
-    throw new Error((data && (data.error || data.message)) || `http_${response.status}`)
-  }
-  return { data }
-}
 
 // ---- MARKDOWN RENDERER ----
 function renderMarkdown(text) {
@@ -496,8 +476,8 @@ async function startQuiz() {
   }
 
   try {
-    const res = await httpGet(`/api/quiz/${cat}/${diff}?count=${count}`);
-    const { questions } = res.data;
+    const res = await fetchLeagueQuiz({ category: cat, difficulty: diff, count });
+    const { questions } = res;
 
     if (!questions || questions.length === 0) {
       alert('No questions available for this selection. Try another league or difficulty.');
@@ -1084,8 +1064,8 @@ async function startPlayerQuiz(playerName, difficulty) {
   document.body.appendChild(loader);
 
   try {
-    const res = await httpPost('/api/ai/player-quiz', { playerName, difficulty });
-    const { questions } = res.data;
+    const res = await fetchPlayerQuiz({ playerName, difficulty });
+    const { questions } = res;
 
     loader.remove();
 
@@ -1285,15 +1265,12 @@ async function sendChatMessage() {
   if (sendBtn) sendBtn.disabled = true;
 
   try {
-    const res = await httpPost('/api/ai/chat', {
-      message,
-      history: AppState.chat.history.slice(-10)
-    });
+    const res = await sendAiChatMessage({ message });
     AppState.chat.history.push({
       role: 'assistant',
-      content: res.data.reply,
-      parsed: res.data.parsed || null,
-      txHash: res.data.txHash || null
+      content: res.reply,
+      parsed: res.parsed || null,
+      txHash: res.txHash || null
     });
   } catch (e) {
     AppState.chat.history.push({
