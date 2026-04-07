@@ -15,6 +15,7 @@ declare global {
     selectDifficulty?: (level: string) => void
     selectCount?: (count: number) => void
     startQuiz?: () => Promise<void>
+    selectAnswer?: (answer: string) => void
     jumpToQuestion?: (index: number) => void
     goToPrevQuestion?: () => void
     goToNextQuestion?: () => void
@@ -1353,6 +1354,7 @@ function exposeGlobalHandlers() {
     selectDifficulty,
     selectCount,
     startQuiz,
+    selectAnswer,
     jumpToQuestion,
     goToPrevQuestion,
     goToNextQuestion,
@@ -1377,6 +1379,7 @@ function clearGlobalHandlers() {
     'selectDifficulty',
     'selectCount',
     'startQuiz',
+    'selectAnswer',
     'jumpToQuestion',
     'goToPrevQuestion',
     'goToNextQuestion',
