@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
-import { leagues, popularPlayers } from './catalog'
+import { leagues, popularPlayers } from './catalog.ts'
 import {
   CONTRACT_ADDRESSES,
   extractGenLayerErrorMessage,
@@ -11,7 +11,7 @@ import {
   readSessionJson,
   safeJsonParse,
   writeAndWait
-} from './genlayer'
+} from './genlayer.ts'
 
 type Bindings = {
   OPENAI_API_KEY?: string
